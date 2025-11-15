@@ -5,7 +5,7 @@ const timerEl = document.getElementById("timer");
 const startBtn = document.getElementById("start-btn");
 const submitBtn = document.getElementById("submit-btn");
 const displayPara = document.getElementById("text-display");
-const userText = document.getElementById("input-area");
+const inputArea = document.getElementById("input-area");
 
 const wpm = document.querySelectorAll(".wpm");
 const userAccuracy = document.querySelectorAll(".accuracy");
@@ -28,7 +28,7 @@ let time = 60;
 /* 
    Start Button Click Event
 */
-userText.disabled = true;
+inputArea.disabled = true;
 startBtn.addEventListener("click", startTest);
 
 /* 
@@ -55,15 +55,19 @@ async function paraFetching() {
 async function startTest() {
     actualPara = "";
     inputPara = "";
-    userText.value = "";
+    inputArea.value = "";
     time = 61;
     startBtn.disabled = true;
-    userText.disabled = false;
-    userText.focus();
+    inputArea.disabled = false;
+    inputArea.focus();
 
 
     actualPara = await paraFetching();
-    displayPara.textContent = actualPara;
+    // Wrap each character in a span so we can color it
+    displayPara.innerHTML = actualPara
+        .split("")
+        .map(char => `<span>${char}</span>`)
+        .join("");
 
     timerId = setInterval(() => {
         time--;
@@ -88,8 +92,8 @@ function stastics() {
     let inCorrectChar = 0;
 
     
-    inputPara = userText.value;
-    inputPara = userText.value.trim();
+    inputPara = inputArea.value;
+    inputPara = inputArea.value.trim();
 
     for (let i = 0; i < inputPara.length; i++) {
         if (inputPara[i] === actualPara[i]) {
@@ -108,7 +112,7 @@ function stastics() {
 */
 function resultUpdate() {
     clearInterval(timerId);
-    userText.disabled = true;
+    inputArea.disabled = true;
     startBtn.disabled = false;
 
 
@@ -141,4 +145,27 @@ function resultUpdate() {
 
     // Show Results
     resultSection.style.display = "block";
+}
+
+/* 
+   updateKeyword color Function
+*/
+
+
+inputArea.addEventListener("input", updateKeyword);
+
+function updateKeyword() {
+    let typedText = inputArea.value;
+    let spans = displayPara.querySelectorAll("span");
+    
+    for (let i = 0; i < typedText.length; i++) {
+        if (typedText[i] === actualPara[i]) {
+            spans[i].classList.add('correct');
+            spans[i].classList.remove('incorrect');
+        } else {
+            spans[i].classList.add('incorrect');
+            spans[i].classList.remove('correct');
+        }
+    }
+
 }
