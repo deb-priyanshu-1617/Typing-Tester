@@ -1,6 +1,8 @@
 /* 
    Element Selectors
 */
+const container = document.querySelector(".container");
+const toggleTheme = document.getElementById("theme-toggle");
 const timerEl = document.getElementById("timer");
 const startBtn = document.getElementById("start-btn");
 const submitBtn = document.getElementById("submit-btn");
@@ -18,12 +20,37 @@ const resultSection = document.getElementById("results-section");
 /* 
    Variables
 */
+let toggleColor = true;  // starting will be lightTheme
 let actualPara = "";
 let inputPara = "";
 let totalChar = 0;
 let timerId;
 
 let time = 60;
+
+
+/*  backGround changer */
+
+toggleTheme.addEventListener("click",()=>{
+       
+      if(!toggleColor){
+        // LIGHT THEME
+        document.body.style.backgroundColor = "#d6e0f3ff";
+        document.body.style.color = "#1f2937";
+        container.style.backgroundColor = "#ffffff";
+        container.style.color = "#1f2937";
+        console.log("Light theme activated");
+      }
+      else{
+            // DARK THEME
+            document.body.style.backgroundColor = "#111827";
+            document.body.style.color = "#f3f4f6";
+            container.style.backgroundColor = "#1f2937";
+            container.style.color = "#1f2937";
+            console.log("Dark theme activated");
+      }
+     toggleColor = !toggleColor;
+});
 
 /* 
    Start Button Click Event
