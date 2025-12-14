@@ -6,7 +6,8 @@ const toggleTheme = document.getElementById("theme-toggle");
 const timerEl = document.getElementById("timer");
 const startBtn = document.getElementById("start-btn");
 const submitBtn = document.getElementById("submit-btn");
-const displayPara = document.getElementById("text-display");
+const displayPara = document.getElementById("text-display");  
+const inpPara = document.getElementById("input-area");
 const inputArea = document.getElementById("input-area");
 
 const wpm = document.querySelectorAll(".wpm");
@@ -25,10 +26,64 @@ let actualPara = "";
 let inputPara = "";
 let totalChar = 0;
 let timerId;
-
 let time = 60;
 
+/* getter setter for the localStorage */
 
+function getStats(){
+    // Read stats from localStorage, return defaults if missing or corrupted
+    try {
+        const raw = localStorage.getItem('typingStats');
+        if (!raw) {
+            return {
+                totalTests: 0,
+                sumWpm: 0,
+                bestWpm: 0,
+                practiceTime: 0
+            };
+        }
+        const parsed = JSON.parse(raw);
+        // Normalize older shapes
+        return {
+            totalTests: Number(parsed.totalTests) || 0,
+            sumWpm: Number(parsed.sumWpm ?? parsed.totalWpm) || 0,
+            bestWpm: Number(parsed.bestWpm) || 0,
+            practiceTime: Number(parsed.practiceTime) || 0
+        };
+    } catch (e) {
+        console.error('Failed to read typingStats from localStorage:', e);
+        return { totalTests: 0, sumWpm: 0, bestWpm: 0, practiceTime: 0 };
+    }
+}
+
+function saveStates(stats){
+    localStorage.setItem('typingStats', JSON.stringify(stats));
+}
+
+function populateStatsUI(stats) {
+    const avgEl = document.getElementById('avg-wpm');
+    const bestEl = document.getElementById('best-wpm');
+    const totalEl = document.getElementById('total-tests');
+    const timeEl = document.getElementById('practice-time');
+
+    const avg = stats.totalTests > 0 ? (stats.sumWpm / stats.totalTests) : 0;
+
+    if (avgEl) avgEl.textContent = avg.toFixed(0);
+    if (bestEl) bestEl.textContent = stats.bestWpm.toFixed(0);
+    if (totalEl) totalEl.textContent = stats.totalTests;
+    if (timeEl) timeEl.textContent = stats.practiceTime + ' min';
+}
+
+function updateStatsWithResult(wpmCal, sessionSeconds) {
+    const stats = getStats();
+    stats.totalTests += 1;
+    stats.sumWpm += Number(wpmCal) || 0;
+    if ((Number(wpmCal) || 0) > stats.bestWpm) stats.bestWpm = Number(wpmCal) || 0;
+    // store practice time in minutes (rounded)
+    stats.practiceTime += Math.round((sessionSeconds || 0) / 60);
+    saveStates(stats);
+    return stats;
+}
 /*  backGround changer */
 
 toggleTheme.addEventListener("click",()=>{
@@ -172,6 +227,14 @@ function resultUpdate() {
 
     // Show Results
     resultSection.style.display = "block";
+    
+    // Update persistent statistics and refresh UI
+    try {
+        const stats = updateStatsWithResult(wpmCal, usertimeTaken);
+        populateStatsUI(stats);
+    } catch (e) {
+        console.error('Failed to update stats:', e);
+    }
 }
 
 /* 
@@ -196,3 +259,12 @@ function updateKeyword() {
     }
 
 }
+
+
+window.addEventListener("load", () => {
+    // reset display text on load
+    inpPara.value = "";
+    displayPara.textContent = "Click (Start Test button) to begin the test...";
+    const stats = getStats();
+    populateStatsUI(stats);
+});
